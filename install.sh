@@ -156,7 +156,7 @@ select_disks() {
 
 setup_fastest_mirrors() {
     echo -e "\n### Setting up fastest mirrors"
-    if reflector --latest 30 --sort rate --save /etc/pacman.d/mirrorlist; then
+    if reflector --latest 5 --sort rate --save /etc/pacman.d/mirrorlist; then
         echo "Fastest mirrors set up successfully."
     else
         echo "Failed to set up the fastest mirrors. Check your network connection or try different mirrors." >&2
@@ -210,7 +210,6 @@ setup_partitions() {
 echo -n ${password} | cryptsetup luksFormat --type luks2 --pbkdf argon2id --iter-time 5000 --label luks $cryptargs "${part_root}"    echo -n ${password} | cryptsetup luksOpen $cryptargs "${part_root}" luks
     mkfs.btrfs -L btrfs /dev/mapper/luks
 }
-
 setup_btrfs_subvolumes() {
     echo -e "\n### Setting up BTRFS subvolumes"
     mount /dev/mapper/luks /mnt
@@ -226,19 +225,19 @@ setup_btrfs_subvolumes() {
     btrfs subvolume create /mnt/snapshots
     umount /mnt
 
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=root /dev/mapper/luks /mnt
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=root,space_cache=v2 /dev/mapper/luks /mnt
     mkdir -p /mnt/{mnt/btrfs-root,efi,home,var/{cache/pacman,log,tmp,lib/{aurbuild,archbuild,docker}},swap,.snapshots}
     mount "${part_boot}" /mnt/efi
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=/ /dev/mapper/luks /mnt/mnt/btrfs-root
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=home /dev/mapper/luks /mnt/home
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=pkgs /dev/mapper/luks /mnt/var/cache/pacman
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=aurbuild /dev/mapper/luks /mnt/var/lib/aurbuild
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=archbuild /dev/mapper/luks /mnt/var/lib/archbuild
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=docker /dev/mapper/luks /mnt/var/lib/docker
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=logs /dev/mapper/luks /mnt/var/log
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=temp /dev/mapper/luks /mnt/var/tmp
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=swap /dev/mapper/luks /mnt/swap
-    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=snapshots /dev/mapper/luks /mnt/.snapshots
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=/,space_cache=v2 /dev/mapper/luks /mnt/mnt/btrfs-root
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=home,space_cache=v2 /dev/mapper/luks /mnt/home
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=pkgs,space_cache=v2 /dev/mapper/luks /mnt/var/cache/pacman
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=aurbuild,space_cache=v2 /dev/mapper/luks /mnt/var/lib/aurbuild
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=archbuild,space_cache=v2 /dev/mapper/luks /mnt/var/lib/archbuild
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=docker,space_cache=v2 /dev/mapper/luks /mnt/var/lib/docker
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=logs,space_cache=v2 /dev/mapper/luks /mnt/var/log
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=temp,space_cache=v2 /dev/mapper/luks /mnt/var/tmp
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=swap,space_cache=v2 /dev/mapper/luks /mnt/swap
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=snapshots,space_cache=v2 /dev/mapper/luks /mnt/.snapshots
 }
 
 configure_custom_repo() {
