@@ -337,6 +337,8 @@ configure_security_updates() {
     install -Dm644 systemd/system/security-updates.timer /mnt/etc/systemd/system/security-updates.timer
     arch-chroot /mnt systemctl enable security-updates.timer
     arch-chroot /mnt systemctl start security-updates.timer
+    arch-chroot /mnt systemctl enable fstrim.timer
+    arch-chroot /mnt systemctl start fstrim.timer
 }
 
 finalize_installation() {
