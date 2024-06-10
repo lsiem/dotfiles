@@ -292,6 +292,9 @@ echo -e "\n### Setting permissions on the custom repo"
 arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/"
 
 
+echo -e "\n### Configuring SSH"
+install -Dm644 ssh/sshd_config /mnt/etc/ssh/sshd_config
+
 echo -e "\n### Reboot now, and after power off remember to unplug the installation USB"
 umount -R /mnt
 
