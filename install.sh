@@ -168,8 +168,8 @@ enable_reflector_timer() {
     echo -e "\n### Enabling Reflector timer"
     install -Dm644 systemd/reflector.service /mnt/etc/systemd/system/reflector.service
     install -Dm644 systemd/reflector.timer /mnt/etc/systemd/system/reflector.timer
-    arch-chroot /mnt systemctl enable reflector.timer
-    arch-chroot /mnt systemctl start reflector.timer
+    arch-chroot /mnt systemctl enable reflector.timer || { echo "Failed to enable reflector.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl start reflector.timer || { echo "Failed to start reflector.timer" >&2; exit 1; }
 }
 
 setup_firewall() {
@@ -182,8 +182,8 @@ setup_firewall() {
     fi
 
     install -Dm644 etc/nftables.conf /mnt/etc/nftables.conf
-    arch-chroot /mnt systemctl enable nftables
-    arch-chroot /mnt systemctl start nftables
+    arch-chroot /mnt systemctl enable nftables || { echo "Failed to enable nftables" >&2; exit 1; }
+    arch-chroot /mnt systemctl start nftables || { echo "Failed to start nftables" >&2; exit 1; }
 }
 
 setup_partitions() {
@@ -293,15 +293,15 @@ generate_base_config() {
     echo "en_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
     echo "en_DK.UTF-8 UTF-8" >> /mnt/etc/locale.gen
     ln -sf /usr/share/zoneinfo/Europe/Berlin /mnt/etc/localtime
-    arch-chroot /mnt locale-gen
+    arch-chroot /mnt locale-gen || { echo "Failed to generate locale" >&2; exit 1; }
     cat << EOF > /mnt/etc/mkinitcpio.conf
 MODULES=()
 BINARIES=()
 FILES=()
 HOOKS=(base consolefont udev autodetect modconf block encrypt-dh filesystems keyboard)
 EOF 
-    arch-chroot /mnt mkinitcpio -p linu
-    arch-chroot /mnt arch-secure-boot initial-setup
+    arch-chroot /mnt mkinitcpio -p linu || { echo "Failed to run mkinitcpio" >&2; exit 1; }
+    arch-chroot /mnt arch-secure-boot initial-setup || { echo "Failed to run arch-secure-boot initial-setup" >&2; exit 1; }
 }
 
 configure_swap_file() {
@@ -312,17 +312,17 @@ configure_swap_file() {
 
 create_user() {
     echo -e "\n### Creating user"
-    arch-chroot /mnt useradd -m -s /usr/bin/zsh "$user"
+    arch-chroot /mnt useradd -m -s /usr/bin/zsh "$user" || { echo "Failed to create user $user" >&2; exit 1; }
     for group in wheel network nzbget video input uucp; do
-        arch-chroot /mnt groupadd -rf "$group"
-        arch-chroot /mnt gpasswd -a "$user" "$group"
+        arch-chroot /mnt groupadd -rf "$group" || { echo "Failed to add group $group" >&2; exit 1; }
+        arch-chroot /mnt gpasswd -a "$user" "$group" || { echo "Failed to add user $user to group $group" >&2; exit 1; }
     done
-    arch-chroot /mnt chsh -s /usr/bin/zsh
-    echo "$user:$password" | arch-chroot /mnt chpasswd
-    arch-chroot /mnt passwd -dl root
+    arch-chroot /mnt chsh -s /usr/bin/zsh || { echo "Failed to change shell to zsh" >&2; exit 1; }
+    echo "$user:$password" | arch-chroot /mnt chpasswd || { echo "Failed to set password for $user" >&2; exit 1; }
+    arch-chroot /mnt passwd -dl root || { echo "Failed to disable root password" >&2; exit 1; }
 
     echo -e "\n### Setting permissions on the custom repo"
-    arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/"
+    arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/" || { echo "Failed to set permissions on the custom repo" >&2; exit 1; }
 }
 
 configure_ssh() {
@@ -334,12 +334,12 @@ configure_security_updates() {
     echo -e "\n### Configuring automated security updates"
     install -Dm644 systemd/system/security-updates.service /mnt/etc/systemd/system/security-updates.service
     install -Dm644 systemd/system/security-updates.timer /mnt/etc/systemd/system/security-updates.timer
-    arch-chroot /mnt systemctl enable security-updates.timer
-    arch-chroot /mnt systemctl start security-updates.timer
-    arch-chroot /mnt systemctl enable fstrim.timer
-    arch-chroot /mnt systemctl start fstrim.timer
-    arch-chroot /mnt systemctl enable fstrim.timer
-    arch-chroot /mnt systemctl start fstrim.timer
+    arch-chroot /mnt systemctl enable security-updates.timer || { echo "Failed to enable security-updates.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl start security-updates.timer || { echo "Failed to start security-updates.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl enable fstrim.timer || { echo "Failed to enable fstrim.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl start fstrim.timer || { echo "Failed to start fstrim.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl enable fstrim.timer || { echo "Failed to enable fstrim.timer" >&2; exit 1; }
+    arch-chroot /mnt systemctl start fstrim.timer || { echo "Failed to start fstrim.timer" >&2; exit 1; }
 }
 
 finalize_installation() {
