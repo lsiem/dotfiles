@@ -146,6 +146,12 @@ else
     exit 1
 fi
 
+echo -e "\n### Enabling Reflector timer"
+install -Dm644 systemd/reflector.service /mnt/etc/systemd/system/reflector.service
+install -Dm644 systemd/reflector.timer /mnt/etc/systemd/system/reflector.timer
+arch-chroot /mnt systemctl enable reflector.timer
+arch-chroot /mnt systemctl start reflector.timer
+
 echo -e "\n### Setting up partitions"
 umount -R /mnt 2> /dev/null || true
 cryptsetup luksClose luks 2> /dev/null || true
