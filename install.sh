@@ -75,6 +75,8 @@ check_uefi_mode() {
 setup_clock() {
     echo -e "\n### Setting up clock"
     timedatectl set-ntp true
+    systemctl enable systemd-timesyncd.service
+    systemctl start systemd-timesyncd.service
     if [ $? -eq 0 ]; then
         echo "Network time protocol enabled."
     else
@@ -205,8 +207,7 @@ setup_partitions() {
 
     echo -e "\n### Formatting partitions"
     mkfs.vfat -n "EFI" -F 32 "${part_boot}"
-    echo -n ${password} | cryptsetup luksFormat --type luks2 --pbkdf argon2id --label luks $cryptargs "${part_root}"
-    echo -n ${password} | cryptsetup luksOpen $cryptargs "${part_root}" luks
+echo -n ${password} | cryptsetup luksFormat --type luks2 --pbkdf argon2id --iter-time 5000 --label luks $cryptargs "${part_root}"    echo -n ${password} | cryptsetup luksOpen $cryptargs "${part_root}" luks
     mkfs.btrfs -L btrfs /dev/mapper/luks
 }
 
@@ -330,24 +331,7 @@ configure_ssh() {
     install -Dm644 ssh/sshd_config /mnt/etc/ssh/sshd_config
 }
 
-configure_zram_zswap() {
-    echo -e "\n### Configuring ZRAM/Zswap"
-    if pacman -Sy --noconfirm --needed zram-generator; then
-        echo "zram-generator installed successfully."
-    else
-        echo "Failed to install zram-generator. Check your network connection and try again." >&2
-        exit 1
-    fi
-
-    mkdir -p /mnt/etc/systemd/zram-generator.conf.d
-    cat << EOF > /mnt/etc/systemd/zram-generator.conf.d/zram.conf
-[zram0]
-zram-size = ram / 2
-EOF
-
-    arch-chroot /mnt systemctl enable systemd-zram-setup@zram0.service
-    arch-chroot /mnt systemctl start systemd-zram-setup@zram0.service
-}
+configure_security_updates() {
     echo -e "\n### Configuring automated security updates"
     install -Dm644 systemd/system/security-updates.service /mnt/etc/systemd/system/security-updates.service
     install -Dm644 systemd/system/security-updates.timer /mnt/etc/systemd/system/security-updates.timer
@@ -379,7 +363,6 @@ main() {
     configure_swap_file
     create_user
     configure_ssh
-    configure_zram_zswap
     configure_security_updates
     finalize_installation
 }
