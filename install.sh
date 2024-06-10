@@ -96,6 +96,9 @@ else
     exit 1
 fi
 
+echo -e "\n### Enabling parallel downloads in pacman"
+echo "ParallelDownloads = 5" >> /etc/pacman.conf
+
 echo -e "\n### HiDPI screens"
 noyes=("Yes" "The font is too small" "No" "The font size is just fine")
 hidpi=$(get_choice "Font size" "Is your screen HiDPI?" "${noyes[@]}") || exit 1
