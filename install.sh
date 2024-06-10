@@ -225,19 +225,19 @@ setup_btrfs_subvolumes() {
     btrfs subvolume create /mnt/snapshots
     umount /mnt
 
-    mount -o noatime,nodiratime,compress=zstd,subvol=root /dev/mapper/luks /mnt
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=root /dev/mapper/luks /mnt
     mkdir -p /mnt/{mnt/btrfs-root,efi,home,var/{cache/pacman,log,tmp,lib/{aurbuild,archbuild,docker}},swap,.snapshots}
     mount "${part_boot}" /mnt/efi
-    mount -o noatime,nodiratime,compress=zstd,subvol=/ /dev/mapper/luks /mnt/mnt/btrfs-root
-    mount -o noatime,nodiratime,compress=zstd,subvol=home /dev/mapper/luks /mnt/home
-    mount -o noatime,nodiratime,compress=zstd,subvol=pkgs /dev/mapper/luks /mnt/var/cache/pacman
-    mount -o noatime,nodiratime,compress=zstd,subvol=aurbuild /dev/mapper/luks /mnt/var/lib/aurbuild
-    mount -o noatime,nodiratime,compress=zstd,subvol=archbuild /dev/mapper/luks /mnt/var/lib/archbuild
-    mount -o noatime,nodiratime,compress=zstd,subvol=docker /dev/mapper/luks /mnt/var/lib/docker
-    mount -o noatime,nodiratime,compress=zstd,subvol=logs /dev/mapper/luks /mnt/var/log
-    mount -o noatime,nodiratime,compress=zstd,subvol=temp /dev/mapper/luks /mnt/var/tmp
-    mount -o noatime,nodiratime,compress=zstd,subvol=swap /dev/mapper/luks /mnt/swap
-    mount -o noatime,nodiratime,compress=zstd,subvol=snapshots /dev/mapper/luks /mnt/.snapshots
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=/ /dev/mapper/luks /mnt/mnt/btrfs-root
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=home /dev/mapper/luks /mnt/home
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=pkgs /dev/mapper/luks /mnt/var/cache/pacman
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=aurbuild /dev/mapper/luks /mnt/var/lib/aurbuild
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=archbuild /dev/mapper/luks /mnt/var/lib/archbuild
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=docker /dev/mapper/luks /mnt/var/lib/docker
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=logs /dev/mapper/luks /mnt/var/log
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=temp /dev/mapper/luks /mnt/var/tmp
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=swap /dev/mapper/luks /mnt/swap
+    mount -o noatime,nodiratime,compress=zstd,autodefrag,ssd,subvol=snapshots /dev/mapper/luks /mnt/.snapshots
 }
 
 configure_custom_repo() {
