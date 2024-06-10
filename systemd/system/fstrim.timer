@@ -7,3 +7,12 @@ Persistent=true
 
 [Install]
 WantedBy=timers.target
+[Unit]
+Description=Run fstrim weekly
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

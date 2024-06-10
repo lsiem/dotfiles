@@ -339,6 +339,8 @@ configure_security_updates() {
     arch-chroot /mnt systemctl start security-updates.timer
     arch-chroot /mnt systemctl enable fstrim.timer
     arch-chroot /mnt systemctl start fstrim.timer
+    arch-chroot /mnt systemctl enable fstrim.timer
+    arch-chroot /mnt systemctl start fstrim.timer
 }
 
 finalize_installation() {

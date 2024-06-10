@@ -4,3 +4,9 @@ Description=Discard unused blocks on filesystems from time to time
 [Service]
 Type=oneshot
 ExecStart=/usr/sbin/fstrim --all
+[Unit]
+Description=Discard unused blocks on filesystems from time to time
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/fstrim --all
