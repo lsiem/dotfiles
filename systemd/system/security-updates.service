@@ -3,4 +3,4 @@ Description=Automated Security Updates
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/pacman -Syu --noconfirm --needed
+ExecStart=/bin/bash -c 'pacman -Sy && pacman -Qu | grep -Ff <(arch-audit -u | awk "{print \$1}") | xargs -r pacman -S --noconfirm'
