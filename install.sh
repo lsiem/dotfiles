@@ -48,8 +48,8 @@ get_password() {
 
     test_pass=$(dialog --clear --stdout --backtitle "$BACKTITLE" --title "$title" --passwordbox "$description again" 0 0)
     if [[ "$init_pass" != "$test_pass" ]]; then
-        echo "Passwords did not match" >&2
-        exit 1
+        echo "Passwords did not match. Please try again." >&2
+        get_password "$title" "$description"
     fi
     echo $init_pass
 }
@@ -64,49 +64,84 @@ get_choice() {
 
 echo -e "\n### Checking UEFI boot mode"
 if [ ! -f /sys/firmware/efi/fw_platform_size ]; then
-    echo >&2 "You must boot in UEFI mode to continue"
+    echo >&2 "You must boot in UEFI mode to continue. Please restart your system in UEFI mode."
     exit 2
+else
+    echo "UEFI boot mode confirmed."
 fi
 
 echo -e "\n### Setting up clock"
 timedatectl set-ntp true
+if [ $? -eq 0 ]; then
+    echo "Network time protocol enabled."
+else
+    echo "Failed to enable network time protocol." >&2
+    exit 1
+fi
+
 timedatectl set-local-rtc 0
 hwclock --systohc --utc
+if [ $? -eq 0 ]; then
+    echo "System clock synchronized to UTC."
+else
+    echo "Failed to synchronize system clock to UTC." >&2
+    exit 1
+fi
 
 echo -e "\n### Installing additional tools"
-pacman -Sy --noconfirm --needed git reflector terminus-font dialog wget
+if pacman -Sy --noconfirm --needed git reflector terminus-font dialog wget; then
+    echo "Necessary tools installed successfully."
+else
+    echo "Failed to install necessary tools. Check your network connection and try again." >&2
+    exit 1
+fi
 
 echo -e "\n### HiDPI screens"
 noyes=("Yes" "The font is too small" "No" "The font size is just fine")
 hidpi=$(get_choice "Font size" "Is your screen HiDPI?" "${noyes[@]}") || exit 1
 clear
-[[ "$hidpi" == "Yes" ]] && font="ter-132n" || font="ter-716n"
+if [[ "$hidpi" == "Yes" ]]; then
+    font="ter-132n"
+    echo "HiDPI screen detected, setting large font."
+else
+    font="ter-716n"
+    echo "Standard DPI screen detected, setting normal font."
+fi
 setfont "$font"
 
 hostname=$(get_input "Hostname" "Enter hostname") || exit 1
 clear
 : ${hostname:?"hostname cannot be empty"}
+echo "Hostname set to $hostname."
 
 user=$(get_input "User" "Enter username") || exit 1
 clear
 : ${user:?"user cannot be empty"}
+echo "Username set to $user."
 
 password=$(get_password "User" "Enter password") || exit 1
 clear
 : ${password:?"password cannot be empty"}
+echo "Password set successfully."
 
 devicelist=$(lsblk -dplnx size -o name,size | grep -Ev "boot|rpmb|loop" | tac | tr '\n' ' ')
 read -r -a devicelist <<< $devicelist
 
 device=$(get_choice "Installation" "Select installation disk" "${devicelist[@]}") || exit 1
 clear
+echo "Installation disk selected: $device."
 
 luks_header_device=$(get_choice "Installation" "Select disk to write LUKS header to" "${devicelist[@]}") || exit 1
-
 clear
+echo "LUKS header disk selected: $luks_header_device."
 
 echo -e "\n### Setting up fastest mirrors"
-reflector --latest 30 --sort rate --save /etc/pacman.d/mirrorlist
+if reflector --latest 30 --sort rate --save /etc/pacman.d/mirrorlist; then
+    echo "Fastest mirrors set up successfully."
+else
+    echo "Failed to set up the fastest mirrors. Check your network connection or try different mirrors." >&2
+    exit 1
+fi
 
 echo -e "\n### Setting up partitions"
 umount -R /mnt 2> /dev/null || true
@@ -186,7 +221,12 @@ EOF
 fi
 
 echo -e "\n### Installing packages"
-pacstrap -i /mnt maximbaz-base maximbaz-$(uname -m)
+if pacstrap -i /mnt maximbaz-base maximbaz-$(uname -m); then
+    echo "Packages installed successfully."
+else
+    echo "Failed to install packages. Check your network connection or mirror configuration and try again." >&2
+    exit 1
+fi
 
 echo -e "\n### Generating base config files"
 ln -sfT dash /mnt/usr/bin/sh
@@ -209,8 +249,8 @@ MODULES=()
 BINARIES=()
 FILES=()
 HOOKS=(base consolefont udev autodetect modconf block encrypt-dh filesystems keyboard)
-EOF
-arch-chroot /mnt mkinitcpio -p linux
+EOF 
+arch-chroot /mnt mkinitcpio -p linu
 arch-chroot /mnt arch-secure-boot initial-setup
 
 echo -e "\n### Configuring swap file"
@@ -233,3 +273,4 @@ arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/"
 
 echo -e "\n### Reboot now, and after power off remember to unplug the installation USB"
 umount -R /mnt
+
