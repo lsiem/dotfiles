@@ -330,7 +330,24 @@ configure_ssh() {
     install -Dm644 ssh/sshd_config /mnt/etc/ssh/sshd_config
 }
 
-configure_security_updates() {
+configure_zram_zswap() {
+    echo -e "\n### Configuring ZRAM/Zswap"
+    if pacman -Sy --noconfirm --needed zram-generator; then
+        echo "zram-generator installed successfully."
+    else
+        echo "Failed to install zram-generator. Check your network connection and try again." >&2
+        exit 1
+    fi
+
+    mkdir -p /mnt/etc/systemd/zram-generator.conf.d
+    cat << EOF > /mnt/etc/systemd/zram-generator.conf.d/zram.conf
+[zram0]
+zram-size = ram / 2
+EOF
+
+    arch-chroot /mnt systemctl enable systemd-zram-setup@zram0.service
+    arch-chroot /mnt systemctl start systemd-zram-setup@zram0.service
+}
     echo -e "\n### Configuring automated security updates"
     install -Dm644 systemd/system/security-updates.service /mnt/etc/systemd/system/security-updates.service
     install -Dm644 systemd/system/security-updates.timer /mnt/etc/systemd/system/security-updates.timer
@@ -362,6 +379,7 @@ main() {
     configure_swap_file
     create_user
     configure_ssh
+    configure_zram_zswap
     configure_security_updates
     finalize_installation
 }
