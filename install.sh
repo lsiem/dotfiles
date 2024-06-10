@@ -304,8 +304,8 @@ MODULES=()
 BINARIES=()
 FILES=()
 HOOKS=(base consolefont udev autodetect modconf block encrypt-dh filesystems keyboard)
-EOF 
-    arch-chroot /mnt mkinitcpio -p linu || { echo "Failed to run mkinitcpio" >&2; exit 1; }
+EOF
+    arch-chroot /mnt mkinitcpio -p linux || { echo "Failed to run mkinitcpio" >&2; exit 1; }
     arch-chroot /mnt arch-secure-boot initial-setup || { echo "Failed to run arch-secure-boot initial-setup" >&2; exit 1; }
 }
 
