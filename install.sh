@@ -295,6 +295,12 @@ arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/"
 echo -e "\n### Configuring SSH"
 install -Dm644 ssh/sshd_config /mnt/etc/ssh/sshd_config
 
+echo -e "\n### Configuring automated security updates"
+install -Dm644 systemd/system/security-updates.service /mnt/etc/systemd/system/security-updates.service
+install -Dm644 systemd/system/security-updates.timer /mnt/etc/systemd/system/security-updates.timer
+arch-chroot /mnt systemctl enable security-updates.timer
+arch-chroot /mnt systemctl start security-updates.timer
+
 echo -e "\n### Reboot now, and after power off remember to unplug the installation USB"
 umount -R /mnt
 

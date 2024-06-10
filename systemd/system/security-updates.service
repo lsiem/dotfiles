@@ -1,0 +1,6 @@
+[Unit]
+Description=Automated Security Updates
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pacman -Syu --noconfirm --needed
