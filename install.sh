@@ -206,8 +206,13 @@ setup_partitions() {
     fi
 
     echo -e "\n### Formatting partitions"
-    mkfs.vfat -n "EFI" -F 32 "${part_boot}"
-echo -n ${password} | cryptsetup luksFormat --type luks2 --pbkdf argon2id --iter-time 5000 --label luks $cryptargs "${part_root}"    echo -n ${password} | cryptsetup luksOpen $cryptargs "${part_root}" luks
+    if ! mkfs.vfat -n "EFI" -F 32 "${part_boot}"; then
+        echo "Failed to format EFI partition." >&2
+        exit 1
+    fi
+
+    echo -n ${password} | cryptsetup luksFormat --type luks2 --pbkdf argon2id --iter-time 5000 --label luks $cryptargs "${part_root}" || { echo "Failed to format root partition." >&2; exit 1; }
+    echo -n ${password} | cryptsetup luksOpen $cryptargs "${part_root}" luks || { echo "Failed to open encrypted root partition." >&2; exit 1; }
     mkfs.btrfs -L btrfs /dev/mapper/luks
 }
 setup_btrfs_subvolumes() {
