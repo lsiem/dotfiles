@@ -202,7 +202,7 @@ genfstab -L /mnt >> /mnt/etc/fstab
 echo "${hostname}" > /mnt/etc/hostname
 echo "en_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
 echo "en_DK.UTF-8 UTF-8" >> /mnt/etc/locale.gen
-ln -sf /usr/share/zoneinfo/Europe/Copenhagen /mnt/etc/localtime
+ln -sf /usr/share/zoneinfo/Europe/Berlin /mnt/etc/localtime
 arch-chroot /mnt locale-gen
 cat << EOF > /mnt/etc/mkinitcpio.conf
 MODULES=()
@@ -230,19 +230,6 @@ arch-chroot /mnt passwd -dl root
 echo -e "\n### Setting permissions on the custom repo"
 arch-chroot /mnt chown -R "$user:$user" "/var/cache/pacman/${user}-local/"
 
-if [ "${user}" = "maximbaz" ]; then
-    echo -e "\n### Cloning dotfiles"
-    arch-chroot /mnt sudo -u $user bash -c 'git clone --recursive https://github.com/maximbaz/dotfiles.git ~/.dotfiles'
-
-    echo -e "\n### Running initial setup"
-    arch-chroot /mnt /home/$user/.dotfiles/setup-system.sh
-    arch-chroot /mnt sudo -u $user /home/$user/.dotfiles/setup-user.sh
-    arch-chroot /mnt sudo -u $user zsh -ic true
-
-    echo -e "\n### DONE - reboot and re-run both ~/.dotfiles/setup-*.sh scripts"
-else
-    echo -e "\n### DONE - read POST_INSTALL.md for tips on configuring your setup"
-fi
 
 echo -e "\n### Reboot now, and after power off remember to unplug the installation USB"
 umount -R /mnt
