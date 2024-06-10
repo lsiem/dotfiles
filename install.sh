@@ -152,6 +152,18 @@ install -Dm644 systemd/reflector.timer /mnt/etc/systemd/system/reflector.timer
 arch-chroot /mnt systemctl enable reflector.timer
 arch-chroot /mnt systemctl start reflector.timer
 
+echo -e "\n### Setting up firewall"
+if pacman -Sy --noconfirm --needed nftables; then
+    echo "nftables installed successfully."
+else
+    echo "Failed to install nftables. Check your network connection and try again." >&2
+    exit 1
+fi
+
+install -Dm644 etc/nftables.conf /mnt/etc/nftables.conf
+arch-chroot /mnt systemctl enable nftables
+arch-chroot /mnt systemctl start nftables
+
 echo -e "\n### Setting up partitions"
 umount -R /mnt 2> /dev/null || true
 cryptsetup luksClose luks 2> /dev/null || true
